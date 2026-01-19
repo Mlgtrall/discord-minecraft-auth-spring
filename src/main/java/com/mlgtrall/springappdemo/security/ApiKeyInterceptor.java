@@ -1,8 +1,9 @@
-package com.mlgtrall.springappdemo.config;
+package com.mlgtrall.springappdemo.security;
 
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.extern.slf4j.Slf4j;
+import org.jspecify.annotations.NonNull;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.web.servlet.HandlerInterceptor;
@@ -18,7 +19,7 @@ public class ApiKeyInterceptor implements HandlerInterceptor { //TODO: AsyncHand
     private String apiToken;
 
     @Override
-    public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
+    public boolean preHandle(HttpServletRequest request, @NonNull HttpServletResponse response, @NonNull Object handler) throws Exception {
         log.debug("Handling incoming request API Key.");
         log.debug("Request URL: {}", request.getRequestURL().toString());
         log.debug("Request HEADERS: {}", request.getHeaderNames().toString());
