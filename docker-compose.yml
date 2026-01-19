@@ -1,0 +1,48 @@
+version: '3.8'
+
+services:
+  # Сама база данных PostgreSQL
+  db:
+    image: postgres:15-alpine
+    container_name: gaming_bridge_db
+    restart: always
+    environment:
+      POSTGRES_USER: user
+      POSTGRES_PASSWORD: password
+      POSTGRES_DB: gaming_bridge
+    ports:
+      - "5432:5432"
+    volumes:
+      - db_data:/var/lib/postgresql/data
+
+  # Интерфейс для просмотра базы (доступен в браузере по адресу localhost:5050)
+  pgadmin:
+    image: dpage/pgadmin4
+    container_name: gaming_bridge_pgadmin
+    restart: always
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - "5050:80"
+    depends_on:
+      - db
+
+  app:
+    build: .
+    container_name: gaming_bridge_app
+    ports:
+      - "8080:8080"
+    depends_on:
+      - db
+    environment:
+      # Переопределяем настройки подключения, чтобы приложение видело базу внутри сети Docker
+      - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/gaming_bridge
+      - SPRING_DATASOURCE_USERNAME=user
+      - SPRING_DATASOURCE_PASSWORD=password
+      - DISCORD_BOT_TOKEN=${DISCORD_TOKEN} # Токен лучше брать из переменной окружения
+    env_file: .env
+
+
+volumes:
+  db_data:
