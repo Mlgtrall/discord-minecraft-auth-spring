@@ -1,7 +1,7 @@
 version: '3.8'
 
 services:
-  # Сама база данных PostgreSQL
+  #PostgreSQL
   db:
     image: postgres:15-alpine
     container_name: gaming_bridge_db
@@ -15,7 +15,7 @@ services:
     volumes:
       - db_data:/var/lib/postgresql/data
 
-  # Интерфейс для просмотра базы (доступен в браузере по адресу localhost:5050)
+  # Интерфейс бд
   pgadmin:
     image: dpage/pgadmin4
     container_name: gaming_bridge_pgadmin
@@ -28,6 +28,7 @@ services:
     depends_on:
       - db
 
+  #
   app:
     build: .
     container_name: gaming_bridge_app
@@ -36,11 +37,11 @@ services:
     depends_on:
       - db
     environment:
-      # Переопределяем настройки подключения, чтобы приложение видело базу внутри сети Docker
+      # Переменные Docker
       - SPRING_DATASOURCE_URL=jdbc:postgresql://db:5432/gaming_bridge
       - SPRING_DATASOURCE_USERNAME=user
       - SPRING_DATASOURCE_PASSWORD=password
-      - DISCORD_BOT_TOKEN=${DISCORD_TOKEN} # Токен лучше брать из переменной окружения
+      - DISCORD_BOT_TOKEN=${DISCORD_TOKEN}
     env_file: .env
 
 
