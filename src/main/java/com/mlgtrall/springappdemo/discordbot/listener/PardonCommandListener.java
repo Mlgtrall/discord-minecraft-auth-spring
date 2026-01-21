@@ -15,18 +15,17 @@ import java.util.concurrent.TimeUnit;
 @Slf4j
 @Component
 @RequiredArgsConstructor
-public class BanCommandListener extends ListenerAdapter {
+public class PardonCommandListener extends ListenerAdapter {
 
     private final PlayerService playerService;
 
     @Override
-    public void onSlashCommandInteraction(SlashCommandInteractionEvent event) {
-        if(!event.getName().equals("ban")) return;
-        log.debug("BanCommandListener event called!");
+    public void onSlashCommandInteraction(SlashCommandInteractionEvent event){
+        if(!event.getName().equals("pardon")) return;
+        log.debug("PardonCommandListener event called!");
 
         event.deferReply(true).queue(); //Ответ виден только пользователю
 
-        //TODO: Протестировать без проверки Permission, так как проверка указана в инициализации команды в DiscordBotConfig
         if(event.getMember() == null || !event.getMember().hasPermission(Permission.ADMINISTRATOR)) {
             event.getHook()
                     .editOriginal("You don't have permission to use this command!")
@@ -34,20 +33,19 @@ public class BanCommandListener extends ListenerAdapter {
             return;
         }
 
+        //String discordId = Objects.requireNonNull(Objects.requireNonNull(event.getOption("user")).getAsMember()).getId();
+        String  mcName = Objects.requireNonNull(event.getOption("nickname")).getAsString();
 
-        //Логика команды
-        String mcName = Objects.requireNonNull(event.getOption("nickname")).getAsString();
+        //AuthResponse response = playerService.unbanPlayerByDiscordId(discordId);
+        AuthResponse response = playerService.unbanPlayerByMinecraftName(mcName);
 
-        AuthResponse response = playerService.banPlayer(mcName);
-
-        if(response.getResponseCode() == AuthResponse.ResponseCode.NOT_FOUND)
+        if(response.getResponseCode() == AuthResponse.ResponseCode.PARDON_SUCCESS)
             event.getHook()
-                    .editOriginal("That player does not exist in database!")
+                    .editOriginal("Success! Minecraft player **" + mcName + "** unbanned!")
                     .queue();
         else event.getHook()
                 .editOriginal(response.getResponseCode().getMessage())
                 .queue();
-
 
         //Удаление сообщения в чате
         event.getHook().deleteOriginal().queueAfter(10, TimeUnit.SECONDS);

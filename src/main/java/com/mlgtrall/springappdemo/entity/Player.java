@@ -24,7 +24,7 @@ public class Player {
 
     @Id
     @Column(name = "discord_id", unique = true, nullable = false)
-    private String discordId;
+    private Long discordId;
 
     @Column(name = "minecraft_uuid", unique = true)
     private UUID minecraftUuid;

@@ -15,18 +15,16 @@ import java.util.UUID;
 
 @Slf4j
 @Service
-@RequiredArgsConstructor // Автоматически внедряет Repository через конструктор
+@RequiredArgsConstructor
 public class PlayerService {
 
     private final PlayerRepository playerRepository;
 
-
     /**
      * Метод для Discord-бота: предварительная регистрация
      */
-    //TODO: Сделать админ-команду для регистрации других, потому что сейчас это регистрация пользователем с любым доступом!
     @Transactional
-    public AuthResponse registerPlayer(String discordId, String minecraftName) {
+    public AuthResponse registerPlayer(Long discordId, String minecraftName) {
         log.debug("PlayerService.registerPlayer Discord ID, Minecraft Name ({}, {})", discordId, minecraftName);
 
         //Уже зарегистрирован. Исключает повторную регистрацию с того же аккаунта
@@ -52,7 +50,7 @@ public class PlayerService {
 
 
     /**
-     * Основной метод проверки доступа для плагина Minecraft.
+     * Метод проверки доступа для плагина Minecraft.
      * Реализует логику "ленивой" привязки UUID.
      */
     @Transactional
@@ -95,6 +93,8 @@ public class PlayerService {
     }
 
 
+
+
     @Transactional
     public AuthResponse banPlayer(String minecraftName){
         log.debug("PlayerService banPlayer called.");
@@ -122,10 +122,10 @@ public class PlayerService {
     }
 
 
-    @Transactional
+    //@Transactional //TODO: надо ли при рекурсии? изучить
     @Contract("_ -> new")
     private @NonNull AuthResponse banPlayer(@NonNull Player player){
-        log.info("Banning player: {}", player.getMinecraftName());
+        log.info("Banning player: {}", player);
         player.setBanned(true);
         player.setVerified(false);
         playerRepository.save(player);
@@ -135,15 +135,71 @@ public class PlayerService {
 
 
 
+
+    @Transactional
+    public @NonNull AuthResponse unbanPlayerByMinecraftName(String minecraftName){
+        log.debug("PlayerService unbanPlayerByMinecraftName called.");
+        Optional<Player> playerByName = playerRepository.findByMinecraftName(minecraftName);
+        if(playerByName.isEmpty()) return new AuthResponse(false, AuthResponse.ResponseCode.NOT_FOUND);
+        Player player = playerByName.get();
+        if(!player.isBanned()) {
+            log.info("Player not banned: {}", minecraftName);
+            return new AuthResponse(true, AuthResponse.ResponseCode.NOT_BANNED);
+        }
+        return unbanPlayer(player);
+    }
+
+    @Transactional
+    public @NonNull AuthResponse unbanPlayerByDiscordId(Long discordId){
+        log.debug("PlayerService unbanPlayerByDiscordId called.");
+        Optional<Player> playerByDiscordId = playerRepository.findByDiscordId(discordId);
+        if(playerByDiscordId.isEmpty()) return new AuthResponse(false, AuthResponse.ResponseCode.NOT_FOUND);
+        Player player = playerByDiscordId.get();
+        if(!player.isBanned()) {
+            log.info("Player with Discord ID: {} not banned!", discordId);
+            return new AuthResponse(true, AuthResponse.ResponseCode.NOT_BANNED);
+        }
+        return unbanPlayer(player);
+    }
+
+    private @NonNull AuthResponse unbanPlayer(@NonNull Player player){
+        log.info("Unbanning player: {}", player);
+        player.setBanned(false);
+        player.setVerified(true);
+        playerRepository.save(player);
+        log.info("Player unbanned: {}", player);
+        return new AuthResponse(false, AuthResponse.ResponseCode.PARDON_SUCCESS);
+    }
+
+
+
+
+    public @NonNull AuthResponse deletePlayerByDiscordId(Long discordId){
+        log.debug("PlayerService deletePlayerByDiscordId called.");
+        Optional<Player> playerByDiscordId = playerRepository.findByDiscordId(discordId);
+        if(playerByDiscordId.isEmpty()) return new AuthResponse(false, AuthResponse.ResponseCode.NOT_FOUND);
+        Player player = playerByDiscordId.get();
+        return deletePlayer(player);
+    }
+
+    private @NonNull AuthResponse deletePlayer(@NonNull Player player){
+        log.info("Deleting player: {}", player);
+        playerRepository.delete(player);
+        log.info("Player deleted: {}", player);
+        return new AuthResponse(false, AuthResponse.ResponseCode.PLAYER_DELETED);
+    }
+
+
+
+
     /**
-     * Вспомогательный метод для проверки статуса игрока (бан, верификация и т.д.)
+     * Анти-boilerplate метод для проверки статуса игрока (бан, верификация и т.д.)
      */
     @Contract("_ -> new")
     private @NonNull AuthResponse processPlayerAuth(@NonNull Player player){
         if(player.isBanned()) return new AuthResponse(false, AuthResponse.ResponseCode.BANNED);
         if(!player.isVerified()) return new AuthResponse(false, AuthResponse.ResponseCode.NOT_VERIFIED);
 
-        //player.setVerified(true); //TODO: Подстраховка. Нужна ли?
         return new AuthResponse(true,  AuthResponse.ResponseCode.SUCCESS);
     }
 

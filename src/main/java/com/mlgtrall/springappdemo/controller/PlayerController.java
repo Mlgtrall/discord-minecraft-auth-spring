@@ -44,7 +44,7 @@ public class PlayerController {
      * @param name - Minecraft nickname
      */
     @PostMapping("/ban")
-    public AuthResponse banPlayer(@RequestParam(name = "uuid") UUID uuid, @RequestParam(name = "nickname", required = false) String name){
+    public AuthResponse banPlayer(@RequestParam(name = "uuid") UUID uuid, @RequestParam(name = "name", required = false) String name){
         log.debug("PlayerController banPlayer called.");
         log.debug("Incoming POST request.");
         //TODO: Наверное не нужна проверка на null по умолчанию
@@ -58,17 +58,4 @@ public class PlayerController {
         return response;
     }
 
-//
-//    @GetMapping("/check/{name}")
-//    public AuthResponse checkAccess(String name){
-//        return playerService.checkAccess(name);
-//    }
-//
-//
-//
-//    @GetMapping("/check/{uuid}")
-//    public AuthResponse checkAccess(UUID uuid){
-//        return playerService.checkAccess(uuid);
-//    }
-//
 }

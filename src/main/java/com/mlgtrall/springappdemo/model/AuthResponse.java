@@ -14,6 +14,9 @@ public class AuthResponse {
         NOT_FOUND("Account not found."),
         NOT_VERIFIED("Account not verified in Discord"),
         BANNED("Account banned!"),
+        NOT_BANNED("Account not banned!"),
+        PLAYER_DELETED("Player data deleted!"),
+        PARDON_SUCCESS("Account unbanned!"),
         UUID_MISMATCH("This nickname belongs to another account!"),
         FIRST_LOGIN_SUCCESS("First login success! UUID linked."),
         REGISTERED_ALREADY_DISCORD("Account already registered in Discord!"),
@@ -25,8 +28,7 @@ public class AuthResponse {
 
         @Getter
         private String message;
-        private ResponseCode() {}
-        private ResponseCode(String message) {
+        ResponseCode(String message) {
             this.message = message;
         }
 
